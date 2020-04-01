@@ -197,6 +197,15 @@ macro_rules! bench_file_simd_json {
 fn main() {
     print!("{:>35}{:>24}", "DOM", "STRUCT");
 
+    #[cfg(feature = "lib-json-pop")]
+    bench! {
+        name: "json-pop",
+        bench: bench_file,
+        dom: json_pop::value::Value,
+        parse_dom: json_pop_parse_dom,
+        stringify_dom: json_pop::stringify,
+    }
+
     #[cfg(feature = "lib-serde")]
     bench! {
         name: "serde_json",
@@ -256,6 +265,17 @@ where
     use std::str;
     let s = str::from_utf8(bytes).unwrap();
     serde_json::from_str(s)
+}
+
+#[cfg(all(
+    feature = "lib-json-pop",
+    any(feature = "parse-struct", feature = "stringify-struct")
+))]
+fn json_pop_parse_dom(bytes: &[u8]) -> Result<json_pop::value::Value, json_pop::lalrpop_util::ParseError<usize, json_pop::lex::wrap::Wrap<'_>, json_pop::lex::wrap::Error>>
+{
+    use std::str;
+    let s = str::from_utf8(bytes).unwrap();
+    json_pop::parse_str(s)
 }
 
 #[cfg(all(
